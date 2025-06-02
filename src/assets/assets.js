@@ -12,7 +12,7 @@ import sofa from './sofa.svg'
 import table from './table.svg'
 import almira from './almira.svg'
 import dining from './dining.svg'
-import dressing from './Dressing.svg';  // ✅ correct
+import dressing from './dressing.svg';  // ✅ correct
 import teapai from './teapai.svg'
 import puja from './puja.svg'
 import trending1 from './trending_1.jpg'
