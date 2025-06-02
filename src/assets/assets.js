@@ -80,7 +80,7 @@ export const specialityData = [
         speciality: "Dining",
     },
     {
-        image: assets.Dresing,
+        image: assets.dressing,
         speciality: "Dressing",
     },
     {

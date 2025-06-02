@@ -55,7 +55,7 @@ const Navbar = () => {
             <div className='absolute top-0 right-0 pt-14 text-base font-medium text-gray-600 z-20 hidden group-hover:block'>
               <div className='min-w-48 bg-gray-50 rounded flex flex-col gap-4 p-4'>
                 <p onClick={() => navigate('/my-profile')} className='hover:text-black cursor-pointer'>My Profile</p>
-                <p onClick={() => navigate('/my-order')} className='hover:text-black cursor-pointer'>My Order</p>
+                <p onClick={() => navigate('/my-orders')} className='hover:text-black cursor-pointer'>My Order</p>
                 <p className='text-red-500 cursor-pointer' onClick={() => { logout(); navigate('/'); setShowMenu(false); }}>Logout</p>
               </div>
             </div>
@@ -96,7 +96,7 @@ const Navbar = () => {
               ) : (
                 <>
                   <li><Link to="/my-profile" onClick={() => setShowMenu(false)}>My Profile</Link></li>
-                  <li><Link to="/my-order" onClick={() => setShowMenu(false)}>My Order</Link></li>
+                  <li><Link to="/my-orders" onClick={() => setShowMenu(false)}>My Order</Link></li>
                   <li><button onClick={() => { logout(); navigate('/'); setShowMenu(false); }} className="text-red-500 text-left w-full">Logout</button></li>
                 </>
               )}

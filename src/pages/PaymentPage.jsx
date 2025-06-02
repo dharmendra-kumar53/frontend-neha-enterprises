@@ -1,180 +1,147 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import axios from 'axios';
 
 const PaymentPage = () => {
-  const { state } = useLocation();
-  const { address, cart } = state || {}; // Destructure address and cart
+  const location = useLocation();
   const navigate = useNavigate();
 
-  const [paymentMode, setPaymentMode] = useState('COD');
-  const [loading, setLoading] = useState(false);
+  // Receive cartItems and deliveryAddress via react-router location.state
+  const cartItems = location.state?.cartItems || [];
+  const deliveryAddress = location.state?.deliveryAddress || {};
 
-  // Create Razorpay order
-  const createRazorpayOrder = async () => {
-    try {
-      const res = await axios.post('/api/create-order', {
-        amount: cart.totalAmount,
-      });
-      return res.data;
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to create Razorpay order');
-      return null;
-    }
-  };
+  // Calculate total price
+  const totalPrice = cartItems.reduce(
+    (acc, item) => acc + (item.price * (item.quantity || 1)),
+    0
+  );
 
-  // Proceed to payment
-  const handleProceedToPayment = async () => {
-    // Check if address or cart data is missing
-    if (!address || !cart || !cart.items || cart.items.length === 0) {
-      toast.error('Missing address or cart data.');
+  // Place order with Cash on Delivery
+  const handlePlaceOrderCOD = async () => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      alert('Please login to place an order.');
+      navigate('/login');
       return;
     }
 
-    // Handle Online Payment
-    if (paymentMode === 'Online') {
-      const orderData = await createRazorpayOrder();
-      if (!orderData) return;
-
-      const options = {
-        key: 'rzp_test_54UAdXWifTDtPK', // Replace with your Razorpay key
-        amount: orderData.amount,
-        currency: orderData.currency,
-        order_id: orderData.orderId,
-        name: 'FurniCart',
-        description: 'Order Payment',
-        image: '/logo192.png', // Optional logo
-        handler: (response) => {
-          // After successful payment, navigate to the Order Success page
-          const order = {
-            _id: orderData.orderId,
-            items: cart.items,
-            totalAmount: cart.totalAmount,
-            deliveryAddress: address,
-            paymentMode: 'Online',
-            orderDate: new Date().toLocaleString(),
-          };
-
-          // Navigate to Order Success Page
-          navigate('/order-success', { state: { order } });
-          toast.success('Payment successful!');
+    try {
+      const res = await fetch('http://localhost:5000/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-        prefill: {
-          name: address.fullName,
-          email: 'user@example.com',
-          contact: address.mobile,
-        },
-        theme: {
-          color: '#0f9d58',
-        },
-      };
+        body: JSON.stringify({
+          items: cartItems,
+          totalAmount: totalPrice,
+          deliveryAddress: deliveryAddress,
+          paymentMode: 'COD',
+        }),
+      });
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } else {
-      // Handle Cash on Delivery
-      const order = {
-        _id: new Date().getTime().toString(), // Use a timestamp as the order ID
-        items: cart.items,
-        totalAmount: cart.totalAmount,
-        deliveryAddress: address,
-        paymentMode: 'COD',
-        orderDate: new Date().toLocaleString(),
-      };
+      if (!res.ok) {
+        throw new Error('Network response was not ok');
+      }
 
-      // Navigate to Order Success Page for COD
-      navigate('/order-success', { state: { order } });
-      toast.success('Order placed with Cash on Delivery');
+      const data = await res.json();
+
+      if (data.success) {
+        alert('Order placed successfully with Cash on Delivery!');
+        navigate('/my-orders');
+      } else {
+        alert('Failed to place order. Please try again.');
+      }
+    } catch (error) {
+      console.error('❌ COD Order Error:', error);
+      alert('Something went wrong while placing the order.');
     }
   };
 
-  return (
-    <div className="max-w-6xl mx-auto p-4 grid grid-cols-1 md:grid-cols-3 gap-6 min-h-screen">
-      {/* Payment Method */}
-      <div className="col-span-2 bg-white shadow rounded-lg p-6">
-        <h2 className="text-2xl font-semibold mb-4">Choose Payment Method</h2>
+  // Placeholder for online payment
+  const handlePayOnline = () => {
+    alert('Online payment method selected. Razorpay integration coming soon!');
+  };
 
-        <div className="flex flex-col gap-4">
-          <div
-            onClick={() => setPaymentMode('COD')}
-            className={`border rounded-lg p-4 cursor-pointer transition ${
-              paymentMode === 'COD' ? 'border-green-600 bg-green-50' : 'border-gray-300'
-            }`}
-          >
-            <h3 className="text-lg font-semibold mb-1">Cash on Delivery</h3>
-            <p className="text-sm text-gray-500">Pay when the product is delivered.</p>
-          </div>
-
-          <div
-            onClick={() => setPaymentMode('Online')}
-            className={`border rounded-lg p-4 cursor-pointer transition ${
-              paymentMode === 'Online' ? 'border-green-600 bg-green-50' : 'border-gray-300'
-            }`}
-          >
-            <h3 className="text-lg font-semibold mb-1">Online Payment</h3>
-            <p className="text-sm text-gray-500">Pay using UPI, Debit/Credit Card, Net Banking</p>
-          </div>
-        </div>
-
+  if (cartItems.length === 0) {
+    return (
+      <div className="min-h-[80vh] flex flex-col items-center justify-center">
+        <h2 className="text-2xl mb-4">No items to pay for.</h2>
         <button
-          onClick={handleProceedToPayment}
-          disabled={loading}
-          className={`mt-6 w-full py-3 rounded text-white text-lg font-medium ${
-            paymentMode === 'COD' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'
-          }`}
+          onClick={() => navigate('/furnitures')}
+          className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
-          {loading
-            ? 'Processing...'
-            : paymentMode === 'COD'
-            ? 'Place Order (COD)'
-            : 'Proceed to Pay'}
+          Shop Now
         </button>
       </div>
+    );
+  }
 
-      {/* Order Summary */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+  return (
+    <div className="max-w-6xl mx-auto p-6 mt-10 bg-white rounded shadow flex flex-col md:flex-row gap-8">
+      {/* Left Side: Address + Order Summary */}
+      <div className="md:w-2/3 border p-6 rounded shadow-sm">
+        <h2 className="text-3xl font-bold mb-6">Order Summary & Delivery</h2>
 
-        {/* Check if address is available */}
-        {address ? (
-          <div className="text-sm mb-4">
-            <h4 className="font-medium">Deliver to:</h4>
-            <p>{address.fullName}, {address.house}, {address.area}</p>
-            <p>{address.district}, {address.state} - {address.pinCode}</p>
-            <p>Mobile: {address.mobile}</p>
-          </div>
-        ) : (
-          <div className="text-sm text-red-600 mb-4">Address not available</div>
-        )}
+        <section className="mb-8">
+          <h3 className="text-xl font-semibold mb-3">Delivery Address</h3>
+          <p className="mb-1 font-medium">{deliveryAddress.fullName}</p>
+          <p className="mb-1">{deliveryAddress.mobile}</p>
+          <p>
+            {deliveryAddress.house}, {deliveryAddress.area}, {deliveryAddress.district},{' '}
+            {deliveryAddress.state} - {deliveryAddress.pinCode}
+          </p>
+        </section>
 
-        {/* Check if cart items are available */}
-        {cart && cart.items && cart.items.length > 0 ? (
-          <div className="border-t pt-4">
-            {cart.items.map((item, i) => (
-              <div key={i} className="flex justify-between items-center mb-2">
-                <div>
-                  <p className="font-medium">{item.name}</p>
-                  <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+        <section>
+          <h3 className="text-xl font-semibold mb-3">Items</h3>
+          <div className="space-y-4 max-h-[300px] overflow-y-auto">
+            {cartItems.map((item) => (
+              <div
+                key={item.id || item._id}
+                className="flex items-center justify-between border-b pb-2"
+              >
+                <div className="flex items-center gap-4">
+                  <img
+                    src={item.image || '/default-image.jpg'}
+                    alt={item.name}
+                    className="w-16 h-16 object-cover rounded"
+                  />
+                  <div>
+                    <p className="font-semibold">{item.name}</p>
+                    <p className="text-sm text-gray-600">Qty: {item.quantity || 1}</p>
+                  </div>
                 </div>
-                <p>₹{item.price * item.quantity}</p>
+                <p className="font-semibold">
+                  ₹{(item.price * (item.quantity || 1)).toFixed(2)}
+                </p>
               </div>
             ))}
-
-            <div className="mt-4 border-t pt-4 flex justify-between font-semibold text-lg">
-              <span>Total Items:</span>
-              <span>{cart.items.length}</span>
-            </div>
-
-            <div className="mt-2 flex justify-between font-semibold text-xl text-green-700">
-              <span>Total Amount:</span>
-              <span>₹{Number(cart.totalAmount || 0).toFixed(2)}</span>
-            </div>
           </div>
-        ) : (
-          <div className="text-sm text-red-600 mb-4">No items in cart</div>
-        )}
+
+          <div className="text-right mt-6 text-2xl font-bold">
+            Total Price: ₹{totalPrice.toFixed(2)}
+          </div>
+        </section>
+      </div>
+
+      {/* Right Side: Payment Methods */}
+      <div className="md:w-1/3 border p-6 rounded shadow-sm flex flex-col justify-start">
+        <h2 className="text-3xl font-bold mb-6 text-center">Payment Methods</h2>
+
+        <button
+          onClick={handlePlaceOrderCOD}
+          className="mb-6 w-full bg-green-600 text-white py-3 rounded hover:bg-green-700 transition"
+        >
+          Cash on Delivery
+        </button>
+
+        <button
+          onClick={handlePayOnline}
+          className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 transition flex items-center justify-center gap-2"
+        >
+          Pay Online with Razorpay
+        </button>
       </div>
     </div>
   );

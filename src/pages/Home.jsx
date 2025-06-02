@@ -1,4 +1,3 @@
-import React from 'react'
 import Header from '../components/Header'
 import Product from '../components/Product'
 import TopFurniture from '../components/TopFurniture'

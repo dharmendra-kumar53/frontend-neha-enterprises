@@ -10,16 +10,20 @@ const CartPage = () => {
   const navigate = useNavigate();
 
   const handleBuyNow = () => {
-  if (!user) {
-    toast.error("Please login to proceed with your order!");
-    navigate('/login');
-    return;
-  }
+    if (!user) {
+      toast.error("Please login to proceed with your order!");
+      navigate('/login');
+      return;
+    }
 
-  toast.success("Redirecting to address page...");
-  navigate('/address'); // Redirecting to address input page first
-};
+    if (cartItems.length === 0) {
+      toast.error("Your cart is empty!");
+      return;
+    }
 
+    toast.success("Redirecting to address page...");
+    navigate('/address', { state: { cartItems } });  // Pass cartItems here
+  };
 
   const totalItems = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
   const totalPrice = cartItems.reduce((acc, item) => acc + (item.price * (item.quantity || 1)), 0);

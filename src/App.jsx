@@ -20,7 +20,7 @@ import Product from "./components/Product";
 import CartPage from "./pages/CartPage";
 import AddressPage from "./pages/AddressPage";
 import PaymentPage from "./pages/PaymentPage";
-import OrderSuccessPage from "./pages/OrderSuccessPage";
+// import OrderSuccessPage from "./pages/OrderSuccessPage";
 
 // Context
 import AppProvider, { AppContext } from "./contexts/AppContext";
@@ -52,7 +52,7 @@ function AppRoutes() {
       <Route path="/product/:id" element={<Product />} />
       <Route path="/cart" element={<CartPage />} />
       <Route path="/address" element={<AddressPage />} />
-      <Route path="/order-success" element={<OrderSuccessPage />} />
+      {/* <Route path="/order-success" element={<OrderSuccessPage />} /> */}
 
 
       {/* Payment Route - Protected */}

@@ -1,15 +1,17 @@
-import React, { useContext, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useContext, useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { AppContext } from '../contexts/AppContext';
 import { toast } from 'react-toastify';
 
 const AddressPage = () => {
-  const { cart, user, token } = useContext(AppContext);
+  const { user } = useContext(AppContext);
   const navigate = useNavigate();
+  const location = useLocation();
+  const cartItems = location.state?.cartItems || [];
 
   const [address, setAddress] = useState({
-    fullName: '',
-    mobile: '',
+    fullName: user?.name || '',
+    mobile: user?.phone || '',
     house: '',
     area: '',
     district: '',
@@ -23,7 +25,7 @@ const AddressPage = () => {
 
   const handleUseCurrentAddress = () => {
     if (!navigator.geolocation) {
-      toast.error('Geolocation not supported');
+      toast.error('Geolocation not supported by your browser');
       return;
     }
 
@@ -35,7 +37,7 @@ const AddressPage = () => {
           `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
         );
         const data = await res.json();
-        const a = data.address;
+        const a = data.address || {};
 
         setAddress({
           fullName: user?.name || '',
@@ -49,27 +51,28 @@ const AddressPage = () => {
 
         toast.success('Address autofilled!');
       } catch (err) {
-        toast.error('Location fetch failed');
+        toast.error('Failed to fetch address from location');
       }
     });
   };
 
   const handleProceedToPayment = () => {
-    // Validate address
+    // Validate address fields
     for (let [key, val] of Object.entries(address)) {
       if (!val.trim()) {
-        toast.warning(`Please fill ${key}`);
+        toast.warning(`Please fill in ${key}`);
         return;
       }
     }
 
-    // Even if cart is empty, proceed to PaymentPage
-    navigate('/payment', {
-      state: {
-        address,
-        cart,  // Pass cart data here
-      },
-    });
+    if (cartItems.length === 0) {
+      toast.error('Your cart is empty. Please add items to proceed.');
+      navigate('/furnitures');
+      return;
+    }
+
+    // Navigate to payment page with address and cartItems
+    navigate('/payment', { state: { deliveryAddress: address, cartItems } });
   };
 
   return (
@@ -83,23 +86,62 @@ const AddressPage = () => {
             <h3 className="text-xl font-semibold">Delivery Address</h3>
             <button
               onClick={handleUseCurrentAddress}
-              className="px-4 py-2 rounded bg-green-600 text-white "
+              className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
             >
               Use Current Address
             </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {['fullName', 'mobile', 'house', 'area', 'district', 'state', 'pinCode'].map((field) => (
-              <input
-                key={field}
-                name={field}
-                placeholder={field.replace(/([A-Z])/g, ' $1')}
-                value={address[field]}
-                onChange={handleChange}
-                className="border px-4 py-2 rounded"
-              />
-            ))}
+            <input
+              name="fullName"
+              placeholder="Full Name"
+              value={address.fullName}
+              onChange={handleChange}
+              className="border px-4 py-2 rounded"
+            />
+            <input
+              name="mobile"
+              placeholder="Mobile Number"
+              value={address.mobile}
+              onChange={handleChange}
+              className="border px-4 py-2 rounded"
+            />
+            <input
+              name="house"
+              placeholder="House/Flat No."
+              value={address.house}
+              onChange={handleChange}
+              className="border px-4 py-2 rounded"
+            />
+            <input
+              name="area"
+              placeholder="Area/Locality"
+              value={address.area}
+              onChange={handleChange}
+              className="border px-4 py-2 rounded"
+            />
+            <input
+              name="district"
+              placeholder="District"
+              value={address.district}
+              onChange={handleChange}
+              className="border px-4 py-2 rounded"
+            />
+            <input
+              name="state"
+              placeholder="State"
+              value={address.state}
+              onChange={handleChange}
+              className="border px-4 py-2 rounded"
+            />
+            <input
+              name="pinCode"
+              placeholder="PIN Code"
+              value={address.pinCode}
+              onChange={handleChange}
+              className="border px-4 py-2 rounded"
+            />
           </div>
         </div>
 
