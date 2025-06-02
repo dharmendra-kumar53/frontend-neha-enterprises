@@ -7,18 +7,42 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Dependency directories
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+build/
+.out/
+
+# Local environment files
 *.local
+.env
+.env.*.local
+
+# System files
+.DS_Store
+Thumbs.db
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Optional: Ignore test coverage reports
+coverage/
+
+# Optional: Ignore next.js output (if using Next.js)
+.next/
+
+# Optional: Ignore SvelteKit output (if using SvelteKit)
+.svelte-kit/
+
+# Optional: Ignore Nuxt output (if using Nuxt)
+.nuxt/
