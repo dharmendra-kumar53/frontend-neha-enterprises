@@ -12,7 +12,7 @@ import sofa from './sofa.svg'
 import table from './table.svg'
 import almira from './almira.svg'
 import dining from './dining.svg'
-import dressing from './dressing.svg';  // ✅ correct
+import dressing from './dressings.svg'
 import teapai from './teapai.svg'
 import puja from './puja.svg'
 import trending1 from './trending_1.jpg'
@@ -40,7 +40,7 @@ export const assets = {
     table,
     almira,
     dining,
-    dressing, // ✅ correct
+    dressing,
     puja,
     teapai,
     trending1,
